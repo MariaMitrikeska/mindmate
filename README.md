@@ -131,9 +131,9 @@ cd mindmate
 
 ## 👤 Автор
 
-**Алекс Василевски**
-Студент на ПНУВ
-📧 aleksandrovasilevski98@gmail.com
+**Мариа Митрикеска**
+Студент на ФИНКИ
+📧 mariamitrikeska2@gmail.com
 
 ---
 
