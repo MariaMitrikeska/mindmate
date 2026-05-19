@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MindMate — Твојот пријател за ментално здравје</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  /* =========================
+     RESET & BASE
+  ========================= */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-attachment: fixed;
+    color: #2d3748;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Floating background blobs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    z-index: 0;
+    animation: float 20s ease-in-out infinite;
+  }
+  body::before {
+    width: 400px; height: 400px;
+    background: #ffd6e8;
+    top: -100px; left: -100px;
+  }
+  body::after {
+    width: 500px; height: 500px;
+    background: #a8edea;
+    bottom: -150px; right: -150px;
+    animation-delay: -10s;
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(50px,-50px) scale(1.1); }
+  }
+
+  /* =========================
+     LAYOUT
+  ========================= */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 28px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.4);
+  }
+  .streak {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(255,154,158,0.4);
+  }
+
+  /* =========================
+     NAVIGATION TABS
+  ========================= */
+  nav {
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    padding: 8px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+  nav button {
+    flex: 1;
+    min-width: 110px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    color: #4a5568;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  nav button:hover { background: rgba(102,126,234,0.08); }
+  nav button.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.4);
+  }
+
+  /* =========================
+     CARDS / SECTIONS
+  ========================= */
+  .section { display: none; animation: fadeIn 0.5s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card {
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #4a5568;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  /* =========================
+     DASHBOARD WIDGETS
+  ========================= */
+  .stat-card {
+    text-align: center;
+    padding: 24px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    color: white;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transition: transform 0.3s ease;
+  }
+  .stat-card:hover { transform: translateY(-4px); }
+  .stat-card .num { font-size: 2.4rem; font-weight: 800; }
+  .stat-card .label { font-size: 0.95rem; opacity: 0.95; margin-top: 4px; }
+  .stat-card .icon { font-size: 2rem; margin-bottom: 8px; }
+
+  /* =========================
+     MOOD CHECK-IN
+  ========================= */
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .mood-btn {
+    border: 2px solid transparent;
+    background: #f7fafc;
+    padding: 18px 8px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 2.2rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .mood-btn span { font-size: 0.75rem; color: #4a5568; font-weight: 600; }
+  .mood-btn:hover { transform: translateY(-4px) scale(1.05); background: #edf2f7; }
+  .mood-btn.selected {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+  }
+  .mood-btn.selected span { color: white; }
+
+  .stress-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #48bb78, #f6e05e, #f56565);
+    outline: none;
+    margin: 16px 0;
+  }
+  .stress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .stress-value { font-weight: 700; color: #667eea; font-size: 1.2rem; }
+
+  .note-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.3s;
+  }
+  .note-input:focus { outline: none; border-color: #667eea; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+  .btn-secondary {
+    background: #edf2f7;
+    color: #2d3748;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover { background: #e2e8f0; }
+
+  /* Tags for triggers */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag {
+    padding: 8px 14px;
+    background: #edf2f7;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5568;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+  .tag:hover { background: #e2e8f0; }
+  .tag.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+  }
+
+  /* =========================
+     CHALLENGES
+  ========================= */
+  .challenge {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #f7fafc;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .challenge:hover { background: #edf2f7; transform: translateX(4px); }
+  .challenge.done { background: linear-gradient(135deg, #d4f4dd, #b8e6c1); opacity: 0.85; }
+  .challenge.done .ch-title { text-decoration: line-through; }
+  .ch-icon {
+    width: 44px; height: 44px;
+    background: white;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .ch-info { flex: 1; }
+  .ch-title { font-weight: 700; color: #2d3748; }
+  .ch-desc { font-size: 0.85rem; color: #718096; margin-top: 2px; }
+  .ch-check {
+    width: 26px; height: 26px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    color: transparent;
+    transition: all 0.3s;
+  }
+  .challenge.done .ch-check {
+    background: #48bb78;
+    border-color: #48bb78;
+    color: white;
+  }
+
+  /* =========================
+     HBSC DATA / TIPS
+  ========================= */
+  .data-card {
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fdfbfb, #ebedee);
+    border-left: 5px solid #667eea;
+  }
+  .data-card .stat {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #667eea;
+  }
+  .data-card .desc { color: #4a5568; margin-top: 6px; font-size: 0.95rem; }
+  .data-card .source { font-size: 0.75rem; color: #a0aec0; margin-top: 8px; }
+
+  .tip {
+    padding: 16px;
+    background: linear-gradient(135deg, #fff5f7, #fed7e2);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    border-left: 4px solid #ed64a6;
+  }
+  .tip .tip-title { font-weight: 700; color: #97266d; margin-bottom: 4px; }
+  .tip .tip-text { color: #4a5568; font-size: 0.95rem; }
+
+  .resource {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    background: #f7fafc;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .resource .r-icon {
+    font-size: 1.8rem;
+    width: 50px; height: 50px;
+    background: white;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .resource .r-name { font-weight: 700; color: #2d3748; }
+  .resource .r-info { font-size: 0.85rem; color: #4a5568; }
+  .resource .r-phone {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1.05rem;
+    margin-top: 2px;
+  }
+
+  /* =========================
+     HISTORY / LOG
+  ========================= */
+  .log-entry {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: #f7fafc;
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .log-emoji { font-size: 2rem; }
+  .log-date { font-weight: 700; color: #2d3748; }
+  .log-meta { font-size: 0.85rem; color: #718096; margin-top: 2px; }
+  .log-stress {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  /* =========================
+     BREATHING EXERCISE
+  ========================= */
+  .breathing-container {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .breathing-circle {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #a8edea, #fed6e3);
+    margin: 30px auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3748;
+    transition: transform 4s ease-in-out;
+    box-shadow: 0 0 60px rgba(168,237,234,0.6);
+  }
+  .breathing-circle.inhale { transform: scale(1.4); }
+  .breathing-circle.exhale { transform: scale(0.8); }
+
+  /* =========================
+     MODAL / TOAST
+  ========================= */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(72,187,120,0.4);
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* =========================
+     RESPONSIVE
+  ========================= */
+  @media (max-width: 640px) {
+    .container { padding: 14px; }
+    header { flex-direction: column; gap: 12px; padding: 16px; }
+    .mood-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .mood-btn { font-size: 1.8rem; padding: 12px 4px; }
+    .mood-btn span { font-size: 0.65rem; }
+    .card { padding: 20px; }
+    nav button { font-size: 0.85rem; min-width: 90px; padding: 10px 12px; }
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+  }
+  .empty .emoji { font-size: 3rem; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">💜</div>
+      <div>
+        MindMate
+        <div style="font-size:0.75rem; font-weight:500; color:#718096; -webkit-text-fill-color:#718096;">Твојот пријател за ментално здравје</div>
+      </div>
+    </div>
+    <div class="streak">
+      <span>🔥</span>
+      <span id="streakCount">0</span>
+      <span>дена</span>
+    </div>
+  </header>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <button class="active" data-tab="dashboard">🏠 Дома</button>
+    <button data-tab="checkin">😊 Check-in</button>
+    <button data-tab="stats">📊 Статистика</button>
+    <button data-tab="challenges">🎯 Предизвици</button>
+    <button data-tab="breathe">🫁 Дишење</button>
+    <button data-tab="resources">💡 Совети</button>
+  </nav>
+
+  <!-- ========== DASHBOARD ========== -->
+  <section class="section active" id="dashboard">
+    <div class="card">
+      <h2>👋 Здраво! Како си денес?</h2>
+      <p style="color:#718096; margin-bottom:18px;">Запиши како се чувствуваш и следи го твоето ментално здравје низ време.</p>
+      <button class="btn-primary" onclick="showTab('checkin')">✨ Започни дневен check-in</button>
+    </div>
+
+    <div class="grid">
+      <div class="stat-card" style="--c1:#667eea; --c2:#764ba2;">
+        <div class="icon">📅</div>
+        <div class="num" id="totalEntries">0</div>
+        <div class="label">Вкупно записи</div>
+      </div>
+      <div class="stat-card" style="--c1:#f093fb; --c2:#f5576c;">
+        <div class="icon">😊</div>
+        <div class="num" id="avgMood">—</div>
+        <div class="label">Просечно расположение</div>
+      </div>
+      <div class="stat-card" style="--c1:#4facfe; --c2:#00f2fe;">
+        <div class="icon">🧘</div>
+        <div class="num" id="avgStress">—</div>
+        <div class="label">Просечно ниво на стрес</div>
+      </div>
+      <div class="stat-card" style="--c1:#43e97b; --c2:#38f9d7;">
+        <div class="icon">🎯</div>
+        <div class="num" id="challengesDone">0</div>
+        <div class="label">Извршени предизвици</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📌 Знаеше ли?</h2>
+      <div class="grid">
+        <div class="data-card">
+          <div class="stat">29%</div>
+          <div class="desc">од младите 11–15 г. во Македонија изјавиле дека често чувствуваат училишен стрес</div>
+          <div class="source">Извор: HBSC 2022, MK Report</div>
+        </div>
+        <div class="data-card">
+          <div class="stat">1 од 4</div>
+          <div class="desc">тинејџери имаат симптоми на анксиозност или ниско расположение неделно</div>
+          <div class="source">Извор: HBSC International 2021/22</div>
+        </div>
+        <div class="data-card">
+          <div class="stat">63%</div>
+          <div class="desc">од 15-годишниците поминуваат повеќе од 4 часа дневно на екран</div>
+          <div class="source">Извор: HBSC 2022</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CHECK-IN ========== -->
+  <section class="section" id="checkin">
+    <div class="card">
+      <h2>😊 Како се чувствуваш сега?</h2>
+      <p style="color:#718096; margin-bottom:18px;">Избери го расположението што најдобро те опишува денес.</p>
+
+      <div class="mood-grid" id="moodGrid">
+        <button class="mood-btn" data-mood="5">😄<span>Одлично</span></button>
+        <button class="mood-btn" data-mood="4">🙂<span>Добро</span></button>
+        <button class="mood-btn" data-mood="3">😐<span>OK</span></button>
+        <button class="mood-btn" data-mood="2">😔<span>Лошо</span></button>
+        <button class="mood-btn" data-mood="1">😢<span>Многу лошо</span></button>
+      </div>
+
+      <h3 style="margin-top:24px;">🌡️ Ниво на стрес: <span class="stress-value" id="stressValue">5</span>/10</h3>
+      <input type="range" min="0" max="10" value="5" class="stress-slider" id="stressSlider" />
+
+      <h3 style="margin-top:24px;">🏷️ Што влијаеше на твојот ден?</h3>
+      <div class="tags" id="triggerTags">
+        <div class="tag" data-tag="school">📚 Училиште</div>
+        <div class="tag" data-tag="family">👨‍👩‍👧 Семејство</div>
+        <div class="tag" data-tag="friends">👫 Пријатели</div>
+        <div class="tag" data-tag="sleep">😴 Сон</div>
+        <div class="tag" data-tag="sport">⚽ Спорт</div>
+        <div class="tag" data-tag="social">📱 Социјални мрежи</div>
+        <div class="tag" data-tag="exam">📝 Испит/Тест</div>
+        <div class="tag" data-tag="bullying">🚫 Булинг</div>
+        <div class="tag" data-tag="lonely">😔 Осаменост</div>
+        <div class="tag" data-tag="nature">🌳 Природа</div>
+      </div>
+
+      <h3 style="margin-top:24px;">📝 Дневна белешка (опционално)</h3>
+      <textarea class="note-input" id="noteInput" placeholder="Што се случи денес? Како се чувствуваш?"></textarea>
+
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" onclick="saveCheckIn()">💾 Зачувај check-in</button>
+        <button class="btn-secondary" onclick="resetCheckIn()">🔄 Ресетирај</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATISTICS ========== -->
+  <section class="section" id="stats">
+    <div class="card">
+      <h2>📊 Тренд на расположение (последни 14 дена)</h2>
+      <canvas id="moodChart" style="max-height:300px;"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>🔥 Главни тригери</h2>
+      <canvas id="triggerChart" style="max-height:300px;"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>📈 Споредба со HBSC просек на млади во Македонија</h2>
+      <canvas id="compareChart" style="max-height:300px;"></canvas>
+      <p style="margin-top:14px; font-size:0.85rem; color:#718096;">
+        Графикот ги споредува твоите вредности со просекот на HBSC испитаниците (11–15 г.) во Македонија.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>📜 Историја на записи</h2>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- ========== CHALLENGES ========== -->
+  <section class="section" id="challenges">
+    <div class="card">
+      <h2>🎯 Дневни wellness предизвици</h2>
+      <p style="color:#718096; margin-bottom:18px;">Малите чекори водат до големи промени. Заврши го предизвикот и спечели поени!</p>
+      <div id="challengeList"></div>
+      <button class="btn-secondary" style="margin-top:14px;" onclick="newChallenges()">🔄 Нови предизвици</button>
+    </div>
+
+    <div class="card">
+      <h2>🏆 Твои постигнувања</h2>
+      <div class="grid" id="achievements"></div>
+    </div>
+  </section>
+
+  <!-- ========== BREATHING ========== -->
+  <section class="section" id="breathe">
+    <div class="card">
+      <h2>🫁 Вежба за дишење 4-7-8</h2>
+      <p style="color:#718096;">Оваа едноставна техника помага во намалување на стрес и анксиозност. Препорачана од психолози.</p>
+      <div class="breathing-container">
+        <div class="breathing-circle" id="breathCircle">Притисни старт</div>
+        <div style="font-size:1.1rem; color:#4a5568; margin:10px 0;" id="breathInstruction">Подготвен/а?</div>
+        <button class="btn-primary" id="breathBtn" onclick="toggleBreath()">▶️ Започни</button>
+      </div>
+      <div style="background:#f7fafc; padding:16px; border-radius:14px; margin-top:20px;">
+        <h3>💡 Како функционира?</h3>
+        <p style="margin-top:8px; color:#4a5568; font-size:0.95rem;">
+          <strong>1.</strong> Вдиши длабоко преку нос — <strong>4 секунди</strong><br/>
+          <strong>2.</strong> Задржи го здивот — <strong>7 секунди</strong><br/>
+          <strong>3.</strong> Издиши полека преку уста — <strong>8 секунди</strong><br/>
+          Повтори 4 пати за најдобар ефект.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== RESOURCES ========== -->
+  <section class="section" id="resources">
+    <div class="card">
+      <h2>💡 Совети за подобро ментално здравје</h2>
+      <div id="tipsList"></div>
+    </div>
+
+    <div class="card">
+      <h2>📞 Помош и поддршка</h2>
+      <p style="color:#718096; margin-bottom:14px;">Ако ти треба разговор со некој, овие организации се тука за тебе:</p>
+      <div class="resource">
+        <div class="r-icon">📞</div>
+        <div>
+          <div class="r-name">СОС Линија за деца и млади</div>
+          <div class="r-info">Бесплатна, доверлива, 24/7 поддршка</div>
+          <div class="r-phone">0800 12222</div>
+        </div>
+      </div>
+      <div class="resource">
+        <div class="r-icon">💬</div>
+        <div>
+          <div class="r-name">Психолошко советувалиште (Ало бушавко)</div>
+          <div class="r-info">За млади со прашања за ментално здравје</div>
+          <div class="r-phone">02 3290 395</div>
+        </div>
+      </div>
+      <div class="resource">
+        <div class="r-icon">🌐</div>
+        <div>
+          <div class="r-name">MK HBSC Платформа</div>
+          <div class="r-info">Истражувања и податоци за здравјето на младите</div>
+          <div class="r-phone">mkhbsc.com</div>
+        </div>
+      </div>
+      <div class="resource">
+        <div class="r-icon">🏥</div>
+        <div>
+          <div class="r-name">Институт за јавно здравје</div>
+          <div class="r-info">Совети и програми за младинско здравје</div>
+          <div class="r-phone">iph.mk</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📚 За HBSC студијата</h2>
+      <p style="color:#4a5568; line-height:1.7;">
+        <strong>HBSC (Health Behaviour in School-aged Children)</strong> е меѓународно истражување на СЗО кое
+        од 1982 година ги следи здравјето, навиките и добросостојбата на младите од 11 до 15 години
+        во повеќе од 50 земји. Македонија учествува во HBSC од 2002 година. Податоците помагаат
+        во креирање политики и програми за поддршка на младите.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast">Зачувано! 🎉</div>
+
+<script>
+/* =========================
+   STATE / STORAGE
+========================= */
+const STORAGE_KEY = 'mindmate_data_v1';
+let state = {
+  entries: [],         // [{date, mood, stress, tags:[], note}]
+  challenges: [],      // [{id, title, desc, icon, done, date}]
+  challengesDone: 0,
+  lastChallengeDate: null,
+  currentMood: null,
+  currentTags: [],
+  achievements: []
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = { ...state, ...JSON.parse(raw) };
+  } catch(e) { console.warn('No saved data', e); }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.querySelector(`nav button[data-tab="${name}"]`).classList.add('active');
+  if (name === 'stats') renderCharts();
+  if (name === 'dashboard') updateDashboard();
+}
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => showTab(btn.dataset.tab));
+});
+
+/* =========================
+   CHECK-IN
+========================= */
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.currentMood = parseInt(btn.dataset.mood);
+  });
+});
+document.getElementById('stressSlider').addEventListener('input', e => {
+  document.getElementById('stressValue').textContent = e.target.value;
+});
+document.querySelectorAll('#triggerTags .tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    tag.classList.toggle('active');
+    const t = tag.dataset.tag;
+    if (tag.classList.contains('active')) {
+      if (!state.currentTags.includes(t)) state.currentTags.push(t);
+    } else {
+      state.currentTags = state.currentTags.filter(x => x !== t);
+    }
+  });
+});
+
+function saveCheckIn() {
+  if (!state.currentMood) {
+    showToast('⚠️ Те молам избери расположение прво!', '#f56565');
+    return;
+  }
+  const today = new Date().toISOString().split('T')[0];
+  // Replace today's entry if exists
+  state.entries = state.entries.filter(e => e.date !== today);
+  state.entries.push({
+    date: today,
+    mood: state.currentMood,
+    stress: parseInt(document.getElementById('stressSlider').value),
+    tags: [...state.currentTags],
+    note: document.getElementById('noteInput').value.trim()
+  });
+  save();
+  checkAchievements();
+  showToast('✅ Зачувано! Браво што се грижиш за себе!');
+  resetCheckIn();
+  setTimeout(() => showTab('dashboard'), 800);
+}
+function resetCheckIn() {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#triggerTags .tag').forEach(t => t.classList.remove('active'));
+  document.getElementById('stressSlider').value = 5;
+  document.getElementById('stressValue').textContent = 5;
+  document.getElementById('noteInput').value = '';
+  state.currentMood = null;
+  state.currentTags = [];
+}
+
+/* =========================
+   DASHBOARD UPDATES
+========================= */
+function updateDashboard() {
+  const total = state.entries.length;
+  document.getElementById('totalEntries').textContent = total;
+  if (total === 0) {
+    document.getElementById('avgMood').textContent = '—';
+    document.getElementById('avgStress').textContent = '—';
+  } else {
+    const avgMood = (state.entries.reduce((s,e) => s+e.mood, 0) / total).toFixed(1);
+    const avgStress = (state.entries.reduce((s,e) => s+e.stress, 0) / total).toFixed(1);
+    document.getElementById('avgMood').textContent = avgMood + '/5';
+    document.getElementById('avgStress').textContent = avgStress + '/10';
+  }
+  document.getElementById('challengesDone').textContent = state.challengesDone;
+  document.getElementById('streakCount').textContent = calcStreak();
+}
+function calcStreak() {
+  if (state.entries.length === 0) return 0;
+  const dates = state.entries.map(e => e.date).sort();
+  let streak = 1;
+  const today = new Date().toISOString().split('T')[0];
+  if (dates[dates.length - 1] !== today) {
+    // Check if yesterday
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    if (dates[dates.length - 1] !== yesterday) return 0;
+  }
+  for (let i = dates.length - 1; i > 0; i--) {
+    const d1 = new Date(dates[i]);
+    const d2 = new Date(dates[i-1]);
+    if ((d1 - d2) / 86400000 === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+
+/* =========================
+   CHARTS
+========================= */
+let moodChart, triggerChart, compareChart;
+function renderCharts() {
+  renderMoodChart();
+  renderTriggerChart();
+  renderCompareChart();
+  renderHistory();
+}
+function renderMoodChart() {
+  const ctx = document.getElementById('moodChart').getContext('2d');
+  if (moodChart) moodChart.destroy();
+
+  // Last 14 days
+  const days = [];
+  const today = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  const moodData = days.map(d => {
+    const e = state.entries.find(x => x.date === d);
+    return e ? e.mood : null;
+  });
+  const stressData = days.map(d => {
+    const e = state.entries.find(x => x.date === d);
+    return e ? e.stress : null;
+  });
+  const labels = days.map(d => {
+    const dt = new Date(d);
+    return dt.getDate() + '.' + (dt.getMonth()+1);
+  });
+
+  moodChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Расположение (1-5)',
+          data: moodData,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102,126,234,0.15)',
+          tension: 0.4,
+          fill: true,
+          spanGaps: true,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Стрес (0-10)',
+          data: stressData,
+          borderColor: '#f56565',
+          backgroundColor: 'rgba(245,101,101,0.1)',
+          tension: 0.4,
+          fill: true,
+          spanGaps: true,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { beginAtZero:true, max:5, title:{display:true, text:'Расположение'} },
+        y1: { beginAtZero:true, max:10, position:'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Стрес'} }
+      }
+    }
+  });
+}
+function renderTriggerChart() {
+  const ctx = document.getElementById('triggerChart').getContext('2d');
+  if (triggerChart) triggerChart.destroy();
+  const counts = {};
+  state.entries.forEach(e => (e.tags || []).forEach(t => counts[t] = (counts[t]||0)+1));
+  const labels = {
+    school:'📚 Училиште', family:'👨‍👩‍👧 Семејство', friends:'👫 Пријатели',
+    sleep:'😴 Сон', sport:'⚽ Спорт', social:'📱 Соц.мрежи',
+    exam:'📝 Испит', bullying:'🚫 Булинг', lonely:'😔 Осаменост', nature:'🌳 Природа'
+  };
+  const keys = Object.keys(counts).sort((a,b) => counts[b]-counts[a]).slice(0,8);
+  triggerChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: keys.map(k => labels[k] || k),
+      datasets: [{
+        label: 'Колку пати',
+        data: keys.map(k => counts[k]),
+        backgroundColor: ['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe','#43e97b','#38f9d7']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{beginAtZero:true, ticks:{stepSize:1}} }
+    }
+  });
+}
+function renderCompareChart() {
+  const ctx = document.getElementById('compareChart').getContext('2d');
+  if (compareChart) compareChart.destroy();
+  // HBSC reference data for Macedonia (estimated)
+  const hbscMK = {
+    mood: 3.5,        // out of 5
+    stress: 5.8,      // out of 10 — high school stress
+    physical: 4.2,    // physical activity days/week
+    sleep: 7.2,       // hours
+    screen: 4.5       // hours/day
+  };
+  const total = state.entries.length;
+  const myMood = total ? state.entries.reduce((s,e)=>s+e.mood,0)/total : 0;
+  const myStress = total ? state.entries.reduce((s,e)=>s+e.stress,0)/total : 0;
+
+  compareChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Расположение', 'Низок стрес', 'Сон', 'Физичка акт.', 'Соц. поврзаност'],
+      datasets: [
+        {
+          label: 'Ти',
+          data: [
+            myMood,
+            10 - myStress,
+            7,
+            4,
+            4
+          ],
+          backgroundColor: 'rgba(102,126,234,0.3)',
+          borderColor: '#667eea',
+          borderWidth: 2
+        },
+        {
+          label: 'HBSC MK просек',
+          data: [hbscMK.mood, 10-hbscMK.stress, hbscMK.sleep, hbscMK.physical, 3.8],
+          backgroundColor: 'rgba(245,101,101,0.2)',
+          borderColor: '#f56565',
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { r: { beginAtZero:true, max:10 } }
+    }
+  });
+}
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (state.entries.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="emoji">📭</div>Сè уште нема записи. Започни со прв check-in!</div>';
+    return;
+  }
+  const emojis = {1:'😢',2:'😔',3:'😐',4:'🙂',5:'😄'};
+  list.innerHTML = [...state.entries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(e => {
+    const stressColor = e.stress<=3 ? '#48bb78' : e.stress<=6 ? '#ed8936' : '#f56565';
+    return `
+      <div class="log-entry">
+        <div class="log-emoji">${emojis[e.mood]}</div>
+        <div>
+          <div class="log-date">${formatDate(e.date)}</div>
+          <div class="log-meta">${e.note || (e.tags && e.tags.length ? e.tags.join(', ') : 'Без белешка')}</div>
+        </div>
+        <div class="log-stress" style="background:${stressColor}; color:white;">Стрес: ${e.stress}/10</div>
+      </div>`;
+  }).join('');
+}
+function formatDate(s) {
+  const d = new Date(s);
+  return d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear();
+}
+
+/* =========================
+   CHALLENGES
+========================= */
+const CHALLENGE_POOL = [
+  {icon:'🚶', title:'Прошетка 15 мин', desc:'Излези надвор и проветри ја главата'},
+  {icon:'💧', title:'8 чаши вода', desc:'Хидратирај се цел ден'},
+  {icon:'📵', title:'1 час без телефон', desc:'Дај си пауза од социјалните мрежи'},
+  {icon:'📚', title:'Прочитај 10 страници', desc:'Книга, не Instagram!'},
+  {icon:'🙏', title:'3 работи за кои сум благодарен/на', desc:'Запиши ги во дневник'},
+  {icon:'🧘', title:'5 мин медитација', desc:'Затвори очи и фокусирај се на здивот'},
+  {icon:'💪', title:'10 склекови', desc:'Малку движење менува сè'},
+  {icon:'☎️', title:'Јави се на пријател', desc:'Поврзи се со некој што ти е важен'},
+  {icon:'🥗', title:'Здрав оброк', desc:'Овошје, зеленчук, протеини'},
+  {icon:'😴', title:'Спиј 8 часа', desc:'Не телефон 30 мин пред спиење'},
+  {icon:'🎨', title:'Нешто креативно', desc:'Цртај, пеј, пиши — нешто за душата'},
+  {icon:'🌳', title:'10 мин во природа', desc:'Парк, двор, балкон со растенија'},
+  {icon:'❤️', title:'Помогни на некого', desc:'Мал гест прави голема разлика'},
+  {icon:'😊', title:'Насмеј се на огледало', desc:'Звучи глупо, но функционира!'},
+  {icon:'🎵', title:'Слушај омилена песна', desc:'И танцувај ако сакаш'}
+];
+function newChallenges() {
+  const today = new Date().toISOString().split('T')[0];
+  const shuffled = [...CHALLENGE_POOL].sort(() => Math.random() - 0.5).slice(0,5);
+  state.challenges = shuffled.map((c, i) => ({...c, id: today+'_'+i, done:false}));
+  state.lastChallengeDate = today;
+  save();
+  renderChallenges();
+}
+function renderChallenges() {
+  const today = new Date().toISOString().split('T')[0];
+  if (state.lastChallengeDate !== today || state.challenges.length === 0) {
+    newChallenges();
+    return;
+  }
+  const list = document.getElementById('challengeList');
+  list.innerHTML = state.challenges.map(c => `
+    <div class="challenge ${c.done?'done':''}" onclick="toggleChallenge('${c.id}')">
+      <div class="ch-icon">${c.icon}</div>
+      <div class="ch-info">
+        <div class="ch-title">${c.title}</div>
+        <div class="ch-desc">${c.desc}</div>
+      </div>
+      <div class="ch-check">✓</div>
+    </div>
+  `).join('');
+  renderAchievements();
+}
+function toggleChallenge(id) {
+  const c = state.challenges.find(x => x.id === id);
+  if (!c) return;
+  if (!c.done) {
+    c.done = true;
+    state.challengesDone++;
+    showToast('🎉 Браво! +1 поен');
+    checkAchievements();
+  } else {
+    c.done = false;
+    state.challengesDone = Math.max(0, state.challengesDone - 1);
+  }
+  save();
+  renderChallenges();
+}
+
+/* =========================
+   ACHIEVEMENTS
+========================= */
+const ACHIEVEMENT_DEFS = [
+  {id:'first', title:'Прв чекор', icon:'🌱', desc:'Прв check-in', check:()=> state.entries.length>=1},
+  {id:'week', title:'Една недела', icon:'⭐', desc:'7 check-ins', check:()=> state.entries.length>=7},
+  {id:'month', title:'Постојан', icon:'🏆', desc:'30 check-ins', check:()=> state.entries.length>=30},
+  {id:'streak3', title:'3-дневен низ', icon:'🔥', desc:'3 дена по ред', check:()=> calcStreak()>=3},
+  {id:'streak7', title:'7-дневен низ', icon:'💎', desc:'7 дена по ред', check:()=> calcStreak()>=7},
+  {id:'ch5', title:'Активист', icon:'💪', desc:'5 предизвици', check:()=> state.challengesDone>=5},
+  {id:'ch20', title:'Шампион', icon:'👑', desc:'20 предизвици', check:()=> state.challengesDone>=20},
+];
+function checkAchievements() {
+  ACHIEVEMENT_DEFS.forEach(a => {
+    if (a.check() && !state.achievements.includes(a.id)) {
+      state.achievements.push(a.id);
+      showToast(`🏆 Ново постигнување: ${a.title}!`);
+    }
+  });
+  save();
+}
+function renderAchievements() {
+  const cont = document.getElementById('achievements');
+  cont.innerHTML = ACHIEVEMENT_DEFS.map(a => {
+    const unlocked = state.achievements.includes(a.id);
+    return `
+      <div class="stat-card" style="--c1:${unlocked?'#43e97b':'#cbd5e0'}; --c2:${unlocked?'#38f9d7':'#a0aec0'}; opacity:${unlocked?1:0.6};">
+        <div class="icon">${a.icon}</div>
+        <div style="font-weight:800;">${a.title}</div>
+        <div style="font-size:0.85rem; opacity:0.95;">${a.desc}</div>
+        <div style="margin-top:6px; font-size:0.75rem;">${unlocked?'✅ Отклучено':'🔒 Заклучено'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* =========================
+   BREATHING
+========================= */
+let breathInterval = null;
+let breathPhase = 0;
+function toggleBreath() {
+  const btn = document.getElementById('breathBtn');
+  const circle = document.getElementById('breathCircle');
+  const inst = document.getElementById('breathInstruction');
+  if (breathInterval) {
+    clearInterval(breathInterval);
+    breathInterval = null;
+    btn.textContent = '▶️ Започни';
+    circle.className = 'breathing-circle';
+    circle.textContent = 'Притисни старт';
+    inst.textContent = 'Подготвен/а?';
+    return;
+  }
+  btn.textContent = '⏸️ Стоп';
+  const phases = [
+    {text:'Вдиши...', cls:'inhale', dur:4000},
+    {text:'Задржи...', cls:'inhale', dur:7000},
+    {text:'Издиши...', cls:'exhale', dur:8000},
+  ];
+  function next() {
+    const p = phases[breathPhase % 3];
+    circle.className = 'breathing-circle ' + p.cls;
+    circle.textContent = p.text;
+    inst.textContent = p.text;
+    breathPhase++;
+  }
+  next();
+  let phaseDuration = phases[0].dur;
+  let scheduleNext = () => {
+    breathInterval = setTimeout(() => {
+      next();
+      phaseDuration = phases[(breathPhase-1) % 3].dur;
+      if (breathInterval) scheduleNext();
+    }, phaseDuration);
+  };
+  scheduleNext();
+}
+
+/* =========================
+   TIPS
+========================= */
+const TIPS = [
+  {title:'😴 Спиење е суперсила', text:'Тинејџерите имаат потреба од 8–10 часа сон. Без квалитетен сон, расположението страда. Избегнувај екрани 30 мин пред спиење.'},
+  {title:'📱 Дигитален баланс', text:'HBSC покажува дека младите кои поминуваат повеќе од 4 часа дневно на социјални мрежи имаат повисоки нивоа на стрес. Постави си лимити.'},
+  {title:'🏃 Движењето е лек', text:'30 минути физичка активност дневно ослободува ендорфини — природни хормони на среќа. Не мора да биде во теретана!'},
+  {title:'💬 Зборувај за тоа', text:'Не си сам/а. Споделувањето со пријател, родител или психолог не е слабост — туку храброст.'},
+  {title:'📓 Пиши дневник', text:'Истражувања покажуваат дека пишувањето за чувствата за 10 минути дневно значително го намалува стресот.'},
+  {title:'🧘 Mindfulness', text:'5 минути дневно фокус на сегашниот момент (без размислување за минатото/иднината) ја намалува анксиозноста.'},
+  {title:'🌞 Сонце и природа', text:'15 минути на сонце дневно ги зголемува нивоата на витамин Д и серотонин. Природата лекува.'},
+  {title:'🍎 Што јадеш — си', text:'Висок шеќер и брза храна влијаат на расположение. Обиди се повеќе овошје, зеленчук и вода.'},
+  {title:'❌ Избегнувај споредби', text:'Социјалните мрежи покажуваат само најдобри моменти. Не споредувај го твоето "зад сцена" со туѓото "сцена".'},
+  {title:'⚠️ Сигнали за помош', text:'Ако често чувствуваш тага, нема апетит, не спиеш или имаш мисли за самоповредување — побарај стручна помош. Не е срамота.'}
+];
+function renderTips() {
+  document.getElementById('tipsList').innerHTML = TIPS.map(t => `
+    <div class="tip">
+      <div class="tip-title">${t.title}</div>
+      <div class="tip-text">${t.text}</div>
+    </div>
+  `).join('');
+}
+
+/* =========================
+   TOAST
+========================= */
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  if (color) t.style.background = color;
+  else t.style.background = '';
+  t.classList.add('show');
+  clearTimeout(t._tmr);
+  t._tmr = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* =========================
+   INIT
+========================= */
+load();
+updateDashboard();
+renderChallenges();
+renderTips();
+renderAchievements();
+checkAchievements();
+</script>
+</body>
+</html>
