@@ -129,8 +129,12 @@ cd mindmate
 ## Автор
 
 **Мариа Митрикеска 233084**
-Студент на ФИНКИ
-mariamitrikeska2@gmail.com
+***Ева Хаџипетрова 233157**
+***Стефан Немања Марковиќ 233283***
+***Бојан Кисечлички***
+
+Студенти на ФИНКИ eva.hadjipetrova@gmail.com mariamitrikeska2@gmail.com stefannemanjam@gmail.com
+
 
 Предмет: Психологија на училишна возраст
 
