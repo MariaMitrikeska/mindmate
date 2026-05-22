@@ -133,7 +133,7 @@ cd mindmate
 ***Стефан Немања Марковиќ 233283***
 ***Бојан Кисечлички 233218***
 
-Студенти на ФИНКИ eva.hadjipetrova@gmail.com mariamitrikeska2@gmail.com stefannemanjam@gmail.com kiselichkibojan@gmail.com
+Студенти на ФИНКИ hadjipetrovaeva@gmail.com mariamitrikeska2@gmail.com stefannemanjam@gmail.com kiselichkibojan@gmail.com
 
 
 Предмет: Психологија на училишна возраст
