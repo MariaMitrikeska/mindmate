@@ -131,9 +131,9 @@ cd mindmate
 **Мариа Митрикеска 233084**
 ***Ева Хаџипетрова 233157**
 ***Стефан Немања Марковиќ 233283***
-***Бојан Кисечлички***
+***Бојан Кисечлички 233218***
 
-Студенти на ФИНКИ eva.hadjipetrova@gmail.com mariamitrikeska2@gmail.com stefannemanjam@gmail.com
+Студенти на ФИНКИ eva.hadjipetrova@gmail.com mariamitrikeska2@gmail.com stefannemanjam@gmail.com kiselichkibojan@gmail.com
 
 
 Предмет: Психологија на училишна возраст
